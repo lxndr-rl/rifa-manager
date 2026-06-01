@@ -1,54 +1,60 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/database');
+const { authMiddleware } = require('../middleware/auth');
+const prisma = require('../db/prisma');
 
-router.get('/rifa/:rifaId', (req, res) => {
-  const tickets = db.prepare(
-    'SELECT * FROM tickets WHERE rifa_id = ? ORDER BY numero'
-  ).all(req.params.rifaId);
+router.use(authMiddleware);
+
+router.get('/rifa/:rifaId', async (req, res) => {
+  const tickets = await prisma.ticket.findMany({
+    where: { rifaId: parseInt(req.params.rifaId) },
+    orderBy: { numero: 'asc' },
+  });
   res.json(tickets);
 });
 
-router.get('/rifa/:rifaId/stats', (req, res) => {
-  const stats = db.prepare(`
-    SELECT 
-      COUNT(*) as total,
-      SUM(CASE WHEN vendido = 1 THEN 1 ELSE 0 END) as vendidos,
-      SUM(CASE WHEN vendido = 0 THEN 1 ELSE 0 END) as disponibles
-    FROM tickets WHERE rifa_id = ?
-  `).get(req.params.rifaId);
-  res.json(stats);
+router.get('/rifa/:rifaId/stats', async (req, res) => {
+  const rifaId = parseInt(req.params.rifaId);
+  const total = await prisma.ticket.count({ where: { rifaId } });
+  const vendidos = await prisma.ticket.count({ where: { rifaId, vendido: true } });
+
+  res.json({ total, vendidos, disponibles: total - vendidos });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const { comprador, telefono, vendido } = req.body;
-  const existing = db.prepare('SELECT * FROM tickets WHERE id = ?').get(req.params.id);
+  const id = parseInt(req.params.id);
+
+  const existing = await prisma.ticket.findUnique({ where: { id } });
   if (!existing) return res.status(404).json({ error: 'Ticket no encontrado' });
 
-  db.prepare(
-    'UPDATE tickets SET comprador = COALESCE(?, comprador), telefono = COALESCE(?, telefono), vendido = COALESCE(?, vendido) WHERE id = ?'
-  ).run(comprador, telefono, vendido, req.params.id);
+  const updated = await prisma.ticket.update({
+    where: { id },
+    data: {
+      comprador: comprador !== undefined ? comprador : existing.comprador,
+      telefono: telefono !== undefined ? telefono : existing.telefono,
+      vendido: vendido !== undefined ? vendido : existing.vendido,
+    },
+  });
 
-  res.json({ id: parseInt(req.params.id), rifa_id: existing.rifa_id, numero: existing.numero, comprador: comprador || existing.comprador, telefono: telefono || existing.telefono, vendido: vendido !== undefined ? vendido : existing.vendido });
+  res.json(updated);
 });
 
-router.post('/rifa/:rifaId/bulk', (req, res) => {
+router.post('/rifa/:rifaId/bulk', async (req, res) => {
   const { tickets: ticketList } = req.body;
   if (!Array.isArray(ticketList)) {
     return res.status(400).json({ error: 'Se requiere un array de tickets' });
   }
 
-  const updateStmt = db.prepare(
-    'UPDATE tickets SET comprador = ?, telefono = ?, vendido = 1 WHERE rifa_id = ? AND numero = ?'
-  );
+  const rifaId = parseInt(req.params.rifaId);
 
-  const updateMany = db.transaction((tickets) => {
-    for (const t of tickets) {
-      updateStmt.run(t.comprador, t.telefono || null, req.params.rifaId, t.numero);
-    }
-  });
+  for (const t of ticketList) {
+    await prisma.ticket.updateMany({
+      where: { rifaId, numero: t.numero },
+      data: { comprador: t.comprador, telefono: t.telefono || null, vendido: true },
+    });
+  }
 
-  updateMany(ticketList);
   res.json({ message: 'Tickets actualizados', count: ticketList.length });
 });
 

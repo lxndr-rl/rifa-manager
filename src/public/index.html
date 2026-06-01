@@ -9,10 +9,38 @@
 <body>
   <header>
     <h1>Rifa Manager</h1>
+    <div id="user-info" class="hidden">
+      <span id="username-display"></span>
+      <button id="btn-logout" class="btn btn-sm btn-secondary">Salir</button>
+    </div>
   </header>
 
   <main>
-    <section id="rifa-list" class="container">
+    <section id="login-section" class="container">
+      <div class="login-box">
+        <h2>Iniciar Sesión</h2>
+        <form id="form-login">
+          <label>Usuario <input type="text" id="login-user" required></label>
+          <label>Contraseña <input type="password" id="login-pass" required></label>
+          <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+        </form>
+        <p class="toggle-auth">¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
+      </div>
+    </section>
+
+    <section id="register-section" class="container hidden">
+      <div class="login-box">
+        <h2>Crear Cuenta</h2>
+        <form id="form-register">
+          <label>Usuario <input type="text" id="reg-user" required></label>
+          <label>Contraseña <input type="password" id="reg-pass" required minlength="6"></label>
+          <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+        </form>
+        <p class="toggle-auth">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+      </div>
+    </section>
+
+    <section id="rifa-list" class="container hidden">
       <div class="header-row">
         <h2>Mis Rifas</h2>
         <button id="btn-new-rifa" class="btn btn-primary">+ Nueva Rifa</button>

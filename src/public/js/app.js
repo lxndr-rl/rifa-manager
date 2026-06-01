@@ -1,18 +1,102 @@
 const API = '/api';
+let token = localStorage.getItem('token');
 let currentRifaId = null;
 
 async function fetchJSON(url, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
     body: options.body ? JSON.stringify(options.body) : undefined
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  if (res.status === 401) {
+    logout();
+    throw new Error('Sesión expirada');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Error' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
 function $(sel) { return document.querySelector(sel); }
-function $$(sel) { return document.querySelectorAll(sel); }
+
+function showSection(id) {
+  ['login-section', 'register-section', 'rifa-list', 'rifa-detail'].forEach(s => {
+    $(`#${s}`).classList.add('hidden');
+  });
+  $(`#${id}`).classList.remove('hidden');
+}
+
+function checkAuth() {
+  if (token) {
+    $('#user-info').classList.remove('hidden');
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    $('#username-display').textContent = payload.username;
+    showSection('rifa-list');
+    loadRifas();
+  } else {
+    $('#user-info').classList.add('hidden');
+    showSection('login-section');
+  }
+}
+
+function logout() {
+  token = null;
+  localStorage.removeItem('token');
+  checkAuth();
+}
+
+$('#btn-logout').addEventListener('click', logout);
+
+$('#form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetchJSON(`${API}/auth/login`, {
+      method: 'POST',
+      body: {
+        username: $('#login-user').value.trim(),
+        password: $('#login-pass').value
+      }
+    });
+    token = res.token;
+    localStorage.setItem('token', token);
+    checkAuth();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+$('#form-register').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await fetchJSON(`${API}/auth/register`, {
+      method: 'POST',
+      body: {
+        username: $('#reg-user').value.trim(),
+        password: $('#reg-pass').value
+      }
+    });
+    alert('Cuenta creada. Inicia sesión.');
+    $('#show-login').click();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+$('#show-register').addEventListener('click', (e) => {
+  e.preventDefault();
+  showSection('register-section');
+});
+
+$('#show-login').addEventListener('click', (e) => {
+  e.preventDefault();
+  showSection('login-section');
+});
 
 async function loadRifas() {
   const rifas = await fetchJSON(`${API}/rifas`);
@@ -26,7 +110,7 @@ async function loadRifas() {
       <h3>${esc(r.nombre)}</h3>
       <p>Premio: ${esc(r.premio)}</p>
       <p>Fecha: ${formatDate(r.fecha)}</p>
-      <p>Números: 1 - ${r.total_numeros}</p>
+      <p>Números: 1 - ${r.totalNumeros}</p>
       <div class="card-actions">
         <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); editRifa(${r.id})">Editar</button>
         <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteRifa(${r.id})">Eliminar</button>
@@ -41,8 +125,7 @@ async function openRifa(id) {
   const tickets = await fetchJSON(`${API}/tickets/rifa/${id}`);
   const stats = await fetchJSON(`${API}/tickets/rifa/${id}/stats`);
 
-  $('#rifa-list').classList.add('hidden');
-  $('#rifa-detail').classList.remove('hidden');
+  showSection('rifa-detail');
 
   $('#rifa-info').innerHTML = `
     <h2>${esc(rifa.nombre)}</h2>
@@ -57,7 +140,7 @@ async function openRifa(id) {
   `;
 
   $('#tickets-grid').innerHTML = tickets.map(t => `
-    <div class="ticket ${t.vendido ? 'sold' : 'available'}" 
+    <div class="ticket ${t.vendido ? 'sold' : 'available'}"
          onclick="openTicket(${t.id}, ${t.numero}, '${esc(t.comprador || '')}', '${esc(t.telefono || '')}')"
          title="${t.vendido ? esc(t.comprador) : 'Disponible'}">
       ${t.numero}
@@ -87,7 +170,7 @@ $('#form-ticket').addEventListener('submit', async (e) => {
 
   await fetchJSON(`${API}/tickets/${id}`, {
     method: 'PUT',
-    body: { comprador, telefono, vendido: 1 }
+    body: { comprador, telefono, vendido: true }
   });
 
   closeTicketModal();
@@ -101,13 +184,12 @@ function esc(str) {
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr);
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 $('#btn-back').addEventListener('click', () => {
-  $('#rifa-detail').classList.add('hidden');
-  $('#rifa-list').classList.remove('hidden');
+  showSection('rifa-list');
   currentRifaId = null;
   loadRifas();
 });
@@ -130,8 +212,8 @@ async function editRifa(id) {
   $('#rifa-id').value = rifa.id;
   $('#rifa-nombre').value = rifa.nombre;
   $('#rifa-premio').value = rifa.premio;
-  $('#rifa-fecha').value = rifa.fecha;
-  $('#rifa-total').value = rifa.total_numeros;
+  $('#rifa-fecha').value = new Date(rifa.fecha).toISOString().split('T')[0];
+  $('#rifa-total').value = rifa.totalNumeros;
   $('#modal-rifa').classList.remove('hidden');
 }
 
@@ -148,7 +230,7 @@ $('#form-rifa').addEventListener('submit', async (e) => {
     nombre: $('#rifa-nombre').value.trim(),
     premio: $('#rifa-premio').value.trim(),
     fecha: $('#rifa-fecha').value,
-    total_numeros: parseInt($('#rifa-total').value) || 100
+    totalNumeros: parseInt($('#rifa-total').value) || 100
   };
 
   if (id) {
@@ -167,4 +249,4 @@ document.querySelectorAll('.modal').forEach(modal => {
   });
 });
 
-loadRifas();
+checkAuth();

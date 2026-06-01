@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Rifa {
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  premio       String
+  fecha        DateTime
+  totalNumeros Int      @default(100)
+  createdAt    DateTime @default(now())
+  tickets      Ticket[]
+}
+
+model Ticket {
+  id        Int      @id @default(autoincrement())
+  rifaId    Int
+  rifa      Rifa     @relation(fields: [rifaId], references: [id], onDelete: Cascade)
+  numero    Int
+  comprador String?
+  telefono  String?
+  vendido   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([rifaId, numero])
+}

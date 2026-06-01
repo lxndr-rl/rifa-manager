@@ -12,9 +12,15 @@ header {
   color: white;
   padding: 1rem 2rem;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 header h1 { font-size: 1.5rem; }
+
+#user-info { display: flex; align-items: center; gap: 1rem; }
+#user-info span { font-size: 0.9rem; opacity: 0.9; }
 
 .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
 
@@ -42,6 +48,39 @@ header h1 { font-size: 1.5rem; }
 .btn-secondary { background: #e2e8f0; color: #475569; }
 .btn-danger { background: #ef4444; color: white; }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+.btn-block { width: 100%; padding: 0.8rem; }
+
+.login-box {
+  max-width: 380px;
+  margin: 4rem auto;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.login-box h2 { text-align: center; margin-bottom: 1.5rem; color: #667eea; }
+
+.login-box form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.login-box form label input {
+  display: block;
+  width: 100%;
+  padding: 0.7rem;
+  margin-top: 0.3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.login-box form label input:focus { outline: none; border-color: #667eea; }
+
+.toggle-auth { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748b; }
+.toggle-auth a { color: #667eea; text-decoration: none; }
+.toggle-auth a:hover { text-decoration: underline; }
 
 .rifas-grid {
   display: grid;
@@ -170,7 +209,18 @@ form label input:focus { outline: none; border-color: #667eea; }
   margin-top: 1rem;
 }
 
+.error-msg {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.7rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 @media (max-width: 600px) {
   .tickets-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
   .stats { flex-direction: column; }
+  header { flex-direction: column; gap: 0.5rem; }
 }
