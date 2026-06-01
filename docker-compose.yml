@@ -1,0 +1,15 @@
+services:
+  rifa-manager:
+    build: .
+    container_name: rifa-manager
+    ports:
+      - "3000:3000"
+    volumes:
+      - rifa-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+
+volumes:
+  rifa-data:

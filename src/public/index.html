@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rifa Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Rifa Manager</h1>
+  </header>
+
+  <main>
+    <section id="rifa-list" class="container">
+      <div class="header-row">
+        <h2>Mis Rifas</h2>
+        <button id="btn-new-rifa" class="btn btn-primary">+ Nueva Rifa</button>
+      </div>
+      <div id="rifas-grid" class="rifas-grid"></div>
+    </section>
+
+    <section id="rifa-detail" class="container hidden">
+      <button id="btn-back" class="btn btn-secondary">&larr; Volver</button>
+      <div id="rifa-info" class="rifa-info"></div>
+      <div id="stats" class="stats"></div>
+      <div id="tickets-grid" class="tickets-grid"></div>
+    </section>
+  </main>
+
+  <div id="modal-rifa" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modal-title">Nueva Rifa</h2>
+      <form id="form-rifa">
+        <input type="hidden" id="rifa-id">
+        <label>Nombre <input type="text" id="rifa-nombre" required></label>
+        <label>Premio <input type="text" id="rifa-premio" required></label>
+        <label>Fecha <input type="date" id="rifa-fecha" required></label>
+        <label>Total Números <input type="number" id="rifa-total" value="100" min="1" max="9999"></label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-ticket" class="modal hidden">
+    <div class="modal-content">
+      <h2>Ticket #<span id="ticket-numero"></span></h2>
+      <form id="form-ticket">
+        <input type="hidden" id="ticket-id">
+        <label>Comprador <input type="text" id="ticket-comprador" required></label>
+        <label>Teléfono (opcional) <input type="tel" id="ticket-telefono"></label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeTicketModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
