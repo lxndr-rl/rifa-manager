@@ -53,7 +53,7 @@ function showToast(message, type = 'success') {
 function $(sel) { return document.querySelector(sel); }
 
 function showSection(id) {
-  ['login-section', 'register-section', 'rifa-list', 'rifa-detail'].forEach(s =>
+  ['login-section', 'rifa-list', 'rifa-detail'].forEach(s =>
     document.getElementById(s).classList.add('hidden')
   );
   document.getElementById(id).classList.remove('hidden');
@@ -120,27 +120,6 @@ $('#form-login').addEventListener('submit', async (e) => {
     setLoading(btn, false);
   }
 });
-
-$('#form-register').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('btn-register');
-  setLoading(btn, true);
-  try {
-    await fetchJSON(`${API}/auth/register`, {
-      method: 'POST',
-      body: { username: $('#reg-user').value.trim(), password: $('#reg-pass').value },
-    });
-    showToast('Cuenta creada. ¡Inicia sesión!', 'success');
-    $('#show-login').click();
-  } catch (err) {
-    showToast(err.message, 'error');
-  } finally {
-    setLoading(btn, false);
-  }
-});
-
-$('#show-register').addEventListener('click', (e) => { e.preventDefault(); showSection('register-section'); });
-$('#show-login').addEventListener('click', (e) => { e.preventDefault(); showSection('login-section'); });
 
 // ===== Rifas =====
 async function loadRifas() {

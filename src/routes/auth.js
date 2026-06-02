@@ -25,22 +25,4 @@ router.post('/login', async (req, res) => {
   res.json({ token, username: user.username });
 });
 
-router.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username y password requeridos' });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password mínimo 6 caracteres' });
-  }
-
-  const existing = await prisma.user.findUnique({ where: { username } });
-  if (existing) return res.status(409).json({ error: 'Username ya existe' });
-
-  const hashed = await bcrypt.hash(password, 10);
-  await prisma.user.create({ data: { username, password: hashed } });
-
-  res.status(201).json({ message: 'Usuario creado' });
-});
-
 module.exports = router;
