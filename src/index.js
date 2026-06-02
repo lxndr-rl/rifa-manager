@@ -15,7 +15,13 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders(res) {
+    res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
 
 app.use('/api/auth', authRouter);
 app.use('/api/rifas', rifasRouter);
