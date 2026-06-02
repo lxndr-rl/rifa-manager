@@ -1,6 +1,9 @@
 #!/bin/sh
-echo "Waiting for MySQL at mysql:3306..."
-while ! nc -z mysql 3306; do
+HOST=$(echo $DATABASE_URL | sed -n 's|.*://.*@\(.*\):.*|\1|p')
+PORT=$(echo $DATABASE_URL | sed -n 's|.*://.*@.*:\(.*\)/.*|\1|p')
+
+echo "Waiting for MySQL at $HOST:$PORT..."
+while ! nc -z $HOST $PORT; do
   sleep 2
 done
 echo "MySQL is ready!"
