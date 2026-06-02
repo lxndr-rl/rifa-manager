@@ -8,6 +8,7 @@ const prisma = require('./db/prisma');
 const authRouter = require('./routes/auth');
 const rifasRouter = require('./routes/rifas');
 const ticketsRouter = require('./routes/tickets');
+const publicRouter = require('./routes/public');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRouter);
 app.use('/api/rifas', rifasRouter);
 app.use('/api/tickets', ticketsRouter);
+app.use('/api/public', publicRouter);
+
+app.get('/sorteo/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'sorteo.html'));
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

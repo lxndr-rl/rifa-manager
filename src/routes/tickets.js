@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
 const prisma = require('../db/prisma');
+const { broadcast } = require('../sse');
 
 router.use(authMiddleware);
 
@@ -37,6 +38,7 @@ router.put('/:id', async (req, res) => {
     },
   });
 
+  broadcast(updated.rifaId, { type: 'ticket', numero: updated.numero, vendido: updated.vendido });
   res.json(updated);
 });
 
@@ -55,6 +57,7 @@ router.post('/rifa/:rifaId/bulk', async (req, res) => {
     });
   }
 
+  broadcast(rifaId, { type: 'refresh' });
   res.json({ message: 'Tickets actualizados', count: ticketList.length });
 });
 

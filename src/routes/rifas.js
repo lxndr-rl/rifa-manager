@@ -10,7 +10,15 @@ router.get('/', async (req, res) => {
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { tickets: true } } },
   });
-  res.json(rifas);
+
+  const soldCounts = await prisma.ticket.groupBy({
+    by: ['rifaId'],
+    where: { rifaId: { in: rifas.map(r => r.id) }, vendido: true },
+    _count: { _all: true },
+  });
+
+  const soldMap = Object.fromEntries(soldCounts.map(s => [s.rifaId, s._count._all]));
+  res.json(rifas.map(r => ({ ...r, vendidos: soldMap[r.id] || 0 })));
 });
 
 router.get('/:id', async (req, res) => {

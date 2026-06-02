@@ -1,13 +1,37 @@
 services:
-  rifa-manager:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ArimarDB2025
+      MYSQL_DATABASE: rifa_manager
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pArimarDB2025"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app:
+    # Producción: imagen pre-compilada por GitHub Actions
+    # Desarrollo local: docker compose up --build
     build: .
+    image: ${REGISTRY_IMAGE:-ghcr.io/lxndr-rl/rifa-manager:latest}
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: "mysql://root:ArimarDB2025@mysql:3306/rifa_manager"
+      JWT_SECRET: "arimar-jwt-k3y-2025-f9a2c4b1"
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "admin123"
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  mysql_data:

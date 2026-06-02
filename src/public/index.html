@@ -3,86 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rifa Manager</title>
+  <title>Arimar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Previene flash de tema incorrecto -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('arimar-theme') ||
+              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
 </head>
 <body>
-  <header>
-    <h1>Rifa Manager</h1>
-    <div id="user-info" class="hidden">
-      <span id="username-display"></span>
-      <button id="btn-logout" class="btn btn-sm btn-secondary">Salir</button>
+
+  <div id="toast-container"></div>
+
+  <header id="main-header" class="hidden">
+    <div class="header-inner">
+      <div class="header-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/>
+          <line x1="10" y1="12" x2="14" y2="12"/>
+        </svg>
+        <span class="brand-name">Arimar</span>
+      </div>
+      <div id="user-info">
+        <button id="btn-theme" class="btn btn-ghost btn-icon btn-sm" title="Cambiar tema" aria-label="Cambiar tema">
+          <!-- moon: visible en modo claro -->
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <!-- sun: visible en modo oscuro -->
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <div class="user-avatar" id="user-avatar"></div>
+        <span id="username-display"></span>
+        <button id="btn-logout" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Salir
+        </button>
+      </div>
     </div>
   </header>
 
   <main>
-    <section id="login-section" class="container">
-      <div class="login-box">
-        <h2>Iniciar Sesión</h2>
-        <form id="form-login">
-          <label>Usuario <input type="text" id="login-user" required></label>
-          <label>Contraseña <input type="password" id="login-pass" required></label>
-          <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+
+    <!-- LOGIN -->
+    <section id="login-section" class="auth-page">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="auth-logo">🎟️</div>
+          <h1>Arimar</h1>
+          <p>Administra tus rifas fácilmente</p>
+        </div>
+        <form id="form-login" class="auth-form">
+          <div class="form-group">
+            <label for="login-user">Usuario</label>
+            <input type="text" id="login-user" placeholder="Tu nombre de usuario" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label for="login-pass">Contraseña</label>
+            <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-login">Iniciar sesión</button>
         </form>
         <p class="toggle-auth">¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
       </div>
     </section>
 
-    <section id="register-section" class="container hidden">
-      <div class="login-box">
-        <h2>Crear Cuenta</h2>
-        <form id="form-register">
-          <label>Usuario <input type="text" id="reg-user" required></label>
-          <label>Contraseña <input type="password" id="reg-pass" required minlength="6"></label>
-          <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+    <!-- REGISTER -->
+    <section id="register-section" class="auth-page hidden">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="auth-logo">🎟️</div>
+          <h1>Crear cuenta</h1>
+          <p>Únete a Arimar</p>
+        </div>
+        <form id="form-register" class="auth-form">
+          <div class="form-group">
+            <label for="reg-user">Usuario</label>
+            <input type="text" id="reg-user" placeholder="Elige un nombre de usuario" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-pass">Contraseña</label>
+            <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-register">Crear cuenta</button>
         </form>
         <p class="toggle-auth">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
       </div>
     </section>
 
-    <section id="rifa-list" class="container hidden">
-      <div class="header-row">
-        <h2>Mis Rifas</h2>
-        <button id="btn-new-rifa" class="btn btn-primary">+ Nueva Rifa</button>
+    <!-- RIFA LIST -->
+    <section id="rifa-list" class="page-section hidden">
+      <div class="container">
+        <div class="page-header">
+          <div>
+            <h2>Mis Rifas</h2>
+            <p class="page-subtitle">Gestiona y sigue el avance de tus rifas</p>
+          </div>
+          <button id="btn-new-rifa" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nueva Rifa
+          </button>
+        </div>
+        <div id="rifas-grid" class="rifas-grid"></div>
       </div>
-      <div id="rifas-grid" class="rifas-grid"></div>
     </section>
 
-    <section id="rifa-detail" class="container hidden">
-      <button id="btn-back" class="btn btn-secondary">&larr; Volver</button>
-      <div id="rifa-info" class="rifa-info"></div>
-      <div id="stats" class="stats"></div>
-      <div id="tickets-grid" class="tickets-grid"></div>
+    <!-- RIFA DETAIL -->
+    <section id="rifa-detail" class="page-section hidden">
+      <div class="container">
+        <button id="btn-back" class="btn btn-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Volver
+        </button>
+        <div id="rifa-info" class="rifa-hero"></div>
+        <div id="stats" class="stats-row"></div>
+        <div class="tickets-header">
+          <h3 class="tickets-title">Tickets</h3>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
+            <span class="legend-item"><span class="legend-dot sold"></span>Vendido</span>
+          </div>
+        </div>
+        <div id="tickets-grid" class="tickets-grid"></div>
+      </div>
     </section>
+
   </main>
 
+  <!-- MODAL RIFA -->
   <div id="modal-rifa" class="modal hidden">
     <div class="modal-content">
-      <h2 id="modal-title">Nueva Rifa</h2>
+      <div class="modal-header">
+        <h2 id="modal-title">Nueva Rifa</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
       <form id="form-rifa">
         <input type="hidden" id="rifa-id">
-        <label>Nombre <input type="text" id="rifa-nombre" required></label>
-        <label>Premio <input type="text" id="rifa-premio" required></label>
-        <label>Fecha <input type="date" id="rifa-fecha" required></label>
-        <label>Total Números <input type="number" id="rifa-total" value="100" min="1" max="9999"></label>
+        <div class="form-group">
+          <label>Nombre de la rifa</label>
+          <input type="text" id="rifa-nombre" placeholder="Ej: Rifa Navidad 2025" required>
+        </div>
+        <div class="form-group">
+          <label>Premio</label>
+          <input type="text" id="rifa-premio" placeholder="Ej: iPhone 16, Televisor, $500…" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha del sorteo</label>
+            <input type="date" id="rifa-fecha" required>
+          </div>
+          <div class="form-group">
+            <label>Total de números</label>
+            <input type="number" id="rifa-total" value="100" min="1" max="9999">
+          </div>
+        </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="submit" class="btn btn-primary">Guardar rifa</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- MODAL TICKET -->
   <div id="modal-ticket" class="modal hidden">
-    <div class="modal-content">
-      <h2>Ticket #<span id="ticket-numero"></span></h2>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2>Ticket <span class="ticket-badge">#<span id="ticket-numero"></span></span></h2>
+        <button class="modal-close" onclick="closeTicketModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
       <form id="form-ticket">
         <input type="hidden" id="ticket-id">
-        <label>Comprador <input type="text" id="ticket-comprador" required></label>
-        <label>Teléfono (opcional) <input type="tel" id="ticket-telefono"></label>
+        <div class="form-group">
+          <label>Nombre del comprador</label>
+          <input type="text" id="ticket-comprador" placeholder="¿Quién compra este ticket?" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono <span class="optional">(opcional)</span></label>
+          <input type="tel" id="ticket-telefono" placeholder="Ej: 555-0000">
+        </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeTicketModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" id="btn-unmark" class="btn btn-outline-danger hidden">Liberar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-ticket">Guardar</button>
         </div>
       </form>
     </div>

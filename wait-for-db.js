@@ -45,7 +45,7 @@ waitForDb().then(async () => {
   const { execSync } = require('child_process');
   try {
     console.log('Running migrations...');
-    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', env: { ...process.env, npm_config_update_notifier: 'false' } });
     console.log('Running seed...');
     execSync('node prisma/seed.js', { stdio: 'inherit' });
     console.log('Starting app...');

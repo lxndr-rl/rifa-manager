@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Consulta los números disponibles del sorteo">
+  <title>Sorteo – Arimar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Previene flash de tema incorrecto -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('arimar-theme') ||
+              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="pub-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/>
+          <line x1="10" y1="12" x2="14" y2="12"/>
+        </svg>
+        <span class="brand-name">Arimar</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.625rem;">
+        <button id="btn-theme" class="btn btn-ghost btn-icon btn-sm" title="Cambiar tema" aria-label="Cambiar tema">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <div class="live-badge" id="live-badge">
+          <span class="live-dot" id="live-dot"></span>
+          <span id="live-text">Conectando…</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="pub-section">
+    <div class="container">
+
+      <div id="state-loading" class="sorteo-loading">
+        <div class="sorteo-loading-icon">🎟️</div>
+        <p>Cargando sorteo…</p>
+      </div>
+
+      <div id="state-error" class="hidden">
+        <div class="empty-state">
+          <div class="empty-state-icon">😕</div>
+          <h3>Sorteo no encontrado</h3>
+          <p>Este sorteo no existe o fue eliminado.</p>
+        </div>
+      </div>
+
+      <div id="state-content" class="hidden">
+        <div id="pub-hero" class="rifa-hero"></div>
+        <div id="pub-stats" class="stats-row" style="margin-top:1.125rem;"></div>
+
+        <div class="section-bar">
+          <div class="section-left">
+            <h3 class="tickets-title" style="margin:0;">Números</h3>
+            <div class="legend">
+              <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
+              <span class="legend-item"><span class="legend-dot sold"></span>Vendido</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.625rem;">
+            <div class="update-info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span id="update-text"></span>
+            </div>
+            <button id="btn-refresh" class="btn btn-secondary btn-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+              </svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        <div id="pub-tickets" class="tickets-grid"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="pub-footer">
+    Vista de solo lectura &middot; Powered by <strong>Arimar</strong>
+  </footer>
+
+  <script src="/js/sorteo.js"></script>
+</body>
+</html>
