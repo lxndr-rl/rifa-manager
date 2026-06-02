@@ -1,26 +1,38 @@
 const mysql = require('mysql2/promise');
+const { URL } = require('url');
 
 async function waitForDb() {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
+  const urlStr = process.env.DATABASE_URL;
+  if (!urlStr) {
     console.error('DATABASE_URL is not set');
     process.exit(1);
   }
 
-  console.log(`Waiting for database...`);
+  // Parse: mysql://user:pass@host:port/database
+  const url = new URL(urlStr.replace('mysql://', 'http://'));
+  
+  const config = {
+    host: url.hostname,
+    port: parseInt(url.port) || 3306,
+    user: url.username,
+    password: decodeURIComponent(url.password),
+    database: url.pathname.replace('/', ''),
+  };
+
+  console.log(`Connecting to ${config.host}:${config.port} as ${config.user}...`);
   
   let attempts = 0;
   const maxAttempts = 30;
   
   while (attempts < maxAttempts) {
     try {
-      const conn = await mysql.createConnection({ uri: url });
+      const conn = await mysql.createConnection(config);
       await conn.end();
       console.log('Database connected!');
       return;
     } catch (e) {
       attempts++;
-      console.log(`Attempt ${attempts}/${maxAttempts} failed. Retrying in 2s...`);
+      console.log(`Attempt ${attempts}/${maxAttempts} failed: ${e.message}`);
       await new Promise(r => setTimeout(r, 2000));
     }
   }
