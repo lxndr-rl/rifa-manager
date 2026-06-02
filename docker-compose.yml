@@ -19,8 +19,6 @@ services:
     # Desarrollo local: docker compose up --build
     build: .
     image: ${REGISTRY_IMAGE:-ghcr.io/lxndr-rl/rifa-manager:latest}
-    ports:
-      - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: "3000"
