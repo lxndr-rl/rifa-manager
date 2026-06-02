@@ -9,10 +9,8 @@ COPY src/ ./src/
 FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /app .
-RUN apk add --no-cache curl netcat-openbsd
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-COPY wait-for-mysql.sh /wait-for-mysql.sh
-RUN chmod +x /wait-for-mysql.sh
-CMD ["/wait-for-mysql.sh"]
+COPY wait-for-db.js /wait-for-db.js
+CMD ["node", "/wait-for-db.js"]
