@@ -1,7 +1,6 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: rifa-mysql
     environment:
       MYSQL_ROOT_PASSWORD: RifaP@ssw0rd2024!
       MYSQL_DATABASE: rifa_manager
@@ -13,12 +12,9 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
-    networks:
-      - rifa-net
 
   rifa-manager:
     build: .
-    container_name: rifa-manager
     ports:
       - "3000:3000"
     environment:
@@ -32,12 +28,6 @@ services:
       mysql:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - rifa-net
 
 volumes:
   mysql-data:
-
-networks:
-  rifa-net:
-    driver: bridge
