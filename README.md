@@ -4,7 +4,7 @@ Sistema de gestión de rifas con MySQL, Prisma y autenticación.
 
 ## Features
 
-- Autenticación con JWT (login/registro)
+- Autenticación con JWT (solo login)
 - Crear rifas con nombre, premio, fecha y cantidad de números
 - Marcar números como vendidos con nombre del comprador y teléfono
 - Vista visual de todos los números (disponibles/vendidos)
@@ -56,7 +56,6 @@ Accede a `http://localhost:3000`
 
 ### Auth
 - `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/register` - Crear cuenta
 
 ### Rifas (requiere token)
 - `GET /api/rifas` - Listar rifas
