@@ -116,10 +116,10 @@ function renderContent(data) {
              data-pagado="${t.pagado}">
           <span class="pub-num">${t.numero}</span>
           ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
-          <span class="pub-badge ${t.pagado ? 'pagado' : 'pendiente'}">${t.pagado ? 'Pagado' : 'Pendiente'}</span>
+          <span class="pub-status-dot ${t.pagado ? 'pagado' : 'pendiente'}" title="${t.pagado ? 'Pagado' : 'Pendiente'}"></span>
         </div>`;
     }
-    return `<div class="ticket pub-ticket available" data-numero="${t.numero}">${t.numero}</div>`;
+    return `<div class="ticket pub-ticket available" data-numero="${t.numero}"><span class="pub-num">${t.numero}</span></div>`;
   }).join('');
 }
 
@@ -174,12 +174,12 @@ function connectSSE() {
             el.innerHTML = `
               <span class="pub-num">${data.numero}</span>
               ${data.comprador ? `<span class="pub-owner">${esc(data.comprador)}</span>` : ''}
-              <span class="pub-badge ${isPagado ? 'pagado' : 'pendiente'}">${isPagado ? 'Pagado' : 'Pendiente'}</span>`;
+              <span class="pub-status-dot ${isPagado ? 'pagado' : 'pendiente'}" title="${isPagado ? 'Pagado' : 'Pendiente'}"></span>`;
             el.dataset.pagado = isPagado;
             el.dataset.comprador = data.comprador || '';
           } else {
             el.className = 'ticket pub-ticket available';
-            el.innerHTML = data.numero;
+            el.innerHTML = `<span class="pub-num">${data.numero}</span>`;
             el.dataset.pagado = 'false';
             el.dataset.comprador = '';
           }
