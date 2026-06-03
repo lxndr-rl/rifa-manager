@@ -107,12 +107,20 @@ function renderContent(data) {
 
   renderStats();
 
-  document.getElementById('pub-tickets').innerHTML = data.tickets.map(t => `
-    <div class="ticket pub-ticket ${t.vendido ? 'sold' : 'available'}"
-         data-numero="${t.numero}"
-         title="${t.vendido ? 'Vendido' : 'Disponible'}">
-      ${t.numero}
-    </div>`).join('');
+  document.getElementById('pub-tickets').innerHTML = data.tickets.map(t => {
+    if (t.vendido) {
+      return `
+        <div class="ticket pub-ticket sold${t.pagado ? ' pagado' : ''}"
+             data-numero="${t.numero}"
+             data-comprador="${esc(t.comprador || '')}"
+             data-pagado="${t.pagado}">
+          <span class="pub-num">${t.numero}</span>
+          ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
+          <span class="pub-badge ${t.pagado ? 'pagado' : 'pendiente'}">${t.pagado ? 'Pagado' : 'Pendiente'}</span>
+        </div>`;
+    }
+    return `<div class="ticket pub-ticket available" data-numero="${t.numero}">${t.numero}</div>`;
+  }).join('');
 }
 
 function renderStats() {
@@ -153,25 +161,38 @@ function connectSSE() {
     }
 
     if (data.type === 'ticket') {
-      // Actualizar solo el ticket que cambió
       const el = document.querySelector(`[data-numero="${data.numero}"]`);
       if (el) {
-        const wasSold = el.classList.contains('sold');
-        const isSold  = data.vendido;
+        const wasSold   = el.classList.contains('sold');
+        const isSold    = data.vendido;
+        const isPagado  = !!data.pagado;
+        const prevPagado = el.dataset.pagado === 'true';
+
+        if (wasSold !== isSold || (isSold && prevPagado !== isPagado)) {
+          if (isSold) {
+            el.className = `ticket pub-ticket sold${isPagado ? ' pagado' : ''}`;
+            el.innerHTML = `
+              <span class="pub-num">${data.numero}</span>
+              ${data.comprador ? `<span class="pub-owner">${esc(data.comprador)}</span>` : ''}
+              <span class="pub-badge ${isPagado ? 'pagado' : 'pendiente'}">${isPagado ? 'Pagado' : 'Pendiente'}</span>`;
+            el.dataset.pagado = isPagado;
+            el.dataset.comprador = data.comprador || '';
+          } else {
+            el.className = 'ticket pub-ticket available';
+            el.innerHTML = data.numero;
+            el.dataset.pagado = 'false';
+            el.dataset.comprador = '';
+          }
+        }
 
         if (wasSold !== isSold) {
-          el.className = `ticket ${isSold ? 'sold' : 'available'}`;
-          el.title     = isSold ? 'Vendido' : 'Disponible';
-
-          // Animar el cambio
-          el.style.transform = 'scale(1.15)';
-          setTimeout(() => { el.style.transform = ''; }, 250);
-
-          // Actualizar estadísticas localmente
           if (isSold) { statsData.vendidos++; statsData.disponibles--; }
           else        { statsData.vendidos--; statsData.disponibles++; }
           renderStats();
         }
+
+        el.style.transform = 'scale(1.15)';
+        setTimeout(() => { el.style.transform = ''; }, 250);
       }
 
       lastUpdated = Date.now();

@@ -118,6 +118,8 @@
           <div class="legend">
             <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
             <span class="legend-item"><span class="legend-dot sold"></span>Vendido</span>
+            <span class="legend-item"><span class="legend-indicator paid"></span>Pagado</span>
+            <span class="legend-item"><span class="legend-indicator pending"></span>Pendiente</span>
           </div>
         </div>
         <div id="tickets-grid" class="tickets-grid"></div>
@@ -186,6 +188,11 @@
           <label>Teléfono <span class="optional">(opcional)</span></label>
           <input type="tel" id="ticket-telefono" placeholder="Ej: 555-0000">
         </div>
+        <label class="toggle-label" for="ticket-pagado">
+          <input type="checkbox" id="ticket-pagado" class="toggle-checkbox">
+          <span class="toggle-switch"></span>
+          <span>Pago recibido</span>
+        </label>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeTicketModal()">Cancelar</button>
           <button type="button" id="btn-unmark" class="btn btn-outline-danger hidden">Liberar</button>

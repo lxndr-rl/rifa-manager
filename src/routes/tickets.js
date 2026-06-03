@@ -4,6 +4,13 @@ const { authMiddleware } = require('../middleware/auth');
 const prisma = require('../db/prisma');
 const { broadcast } = require('../sse');
 
+function maskName(name) {
+  if (!name) return null;
+  return name.trim().split(/\s+/).map((p, i) =>
+    i === 0 ? p : p[0] + 'x'.repeat(Math.max(0, p.length - 1))
+  ).join(' ');
+}
+
 router.use(authMiddleware);
 
 router.get('/rifa/:rifaId', async (req, res) => {
@@ -23,7 +30,7 @@ router.get('/rifa/:rifaId/stats', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  const { comprador, telefono, vendido } = req.body;
+  const { comprador, telefono, vendido, pagado } = req.body;
   const id = parseInt(req.params.id);
 
   const existing = await prisma.ticket.findUnique({ where: { id } });
@@ -33,12 +40,19 @@ router.put('/:id', async (req, res) => {
     where: { id },
     data: {
       comprador: comprador !== undefined ? comprador : existing.comprador,
-      telefono: telefono !== undefined ? telefono : existing.telefono,
-      vendido: vendido !== undefined ? vendido : existing.vendido,
+      telefono:  telefono  !== undefined ? telefono  : existing.telefono,
+      vendido:   vendido   !== undefined ? vendido   : existing.vendido,
+      pagado:    pagado    !== undefined ? pagado    : existing.pagado,
     },
   });
 
-  broadcast(updated.rifaId, { type: 'ticket', numero: updated.numero, vendido: updated.vendido });
+  broadcast(updated.rifaId, {
+    type: 'ticket',
+    numero: updated.numero,
+    vendido: updated.vendido,
+    pagado: updated.pagado,
+    comprador: maskName(updated.comprador),
+  });
   res.json(updated);
 });
 
@@ -53,7 +67,7 @@ router.post('/rifa/:rifaId/bulk', async (req, res) => {
   for (const t of ticketList) {
     await prisma.ticket.updateMany({
       where: { rifaId, numero: t.numero },
-      data: { comprador: t.comprador, telefono: t.telefono || null, vendido: true },
+      data: { comprador: t.comprador, telefono: t.telefono || null, vendido: true, pagado: t.pagado !== undefined ? t.pagado : false },
     });
   }
 

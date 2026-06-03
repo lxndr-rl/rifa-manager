@@ -3,6 +3,13 @@ const router = express.Router();
 const prisma = require('../db/prisma');
 const { subscribe, unsubscribe } = require('../sse');
 
+function maskName(name) {
+  if (!name) return null;
+  return name.trim().split(/\s+/).map((p, i) =>
+    i === 0 ? p : p[0] + 'x'.repeat(Math.max(0, p.length - 1))
+  ).join(' ');
+}
+
 router.get('/rifas/:id', async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
@@ -13,7 +20,7 @@ router.get('/rifas/:id', async (req, res) => {
   const tickets = await prisma.ticket.findMany({
     where: { rifaId: id },
     orderBy: { numero: 'asc' },
-    select: { numero: true, vendido: true },
+    select: { numero: true, vendido: true, comprador: true, pagado: true },
   });
 
   const vendidos = tickets.filter(t => t.vendido).length;
@@ -25,7 +32,12 @@ router.get('/rifas/:id', async (req, res) => {
     totalNumeros: rifa.totalNumeros,
     vendidos,
     disponibles: rifa.totalNumeros - vendidos,
-    tickets,
+    tickets: tickets.map(t => ({
+      numero: t.numero,
+      vendido: t.vendido,
+      comprador: t.vendido ? maskName(t.comprador) : null,
+      pagado: t.vendido ? t.pagado : null,
+    })),
   });
 });
 

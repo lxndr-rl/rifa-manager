@@ -257,11 +257,11 @@ async function openRifa(id) {
       <div class="stat-card stat-available"><div class="stat-number">${stats.disponibles}</div><div class="stat-label">Disponibles</div></div>`;
 
     document.getElementById('tickets-grid').innerHTML = tickets.map(t => `
-      <div class="ticket ${t.vendido ? 'sold' : 'available'}"
+      <div class="ticket ${t.vendido ? 'sold' + (t.pagado ? ' pagado' : '') : 'available'}"
            data-id="${t.id}" data-numero="${t.numero}"
            data-comprador="${esc(t.comprador || '')}" data-telefono="${esc(t.telefono || '')}"
-           data-vendido="${t.vendido}"
-           title="${t.vendido ? esc(t.comprador) + (t.telefono ? ' · ' + esc(t.telefono) : '') : 'Disponible'}">
+           data-vendido="${t.vendido}" data-pagado="${t.pagado}"
+           title="${t.vendido ? esc(t.comprador) + (t.telefono ? ' · ' + esc(t.telefono) : '') + (t.pagado ? ' · ✓ Pagado' : ' · Pendiente') : 'Disponible'}">
         ${t.numero}
       </div>`).join('');
   } catch (err) {
@@ -274,16 +274,17 @@ async function openRifa(id) {
 document.getElementById('tickets-grid').addEventListener('click', (e) => {
   const t = e.target.closest('.ticket');
   if (!t) return;
-  const { id, numero, comprador, telefono, vendido } = t.dataset;
-  openTicket(parseInt(id), parseInt(numero), comprador, telefono, vendido === 'true');
+  const { id, numero, comprador, telefono, vendido, pagado } = t.dataset;
+  openTicket(parseInt(id), parseInt(numero), comprador, telefono, vendido === 'true', pagado === 'true');
 });
 
 // ===== Tickets =====
-function openTicket(id, numero, comprador, telefono, vendido) {
+function openTicket(id, numero, comprador, telefono, vendido, pagado) {
   document.getElementById('ticket-id').value = id;
   document.getElementById('ticket-numero').textContent = numero;
   document.getElementById('ticket-comprador').value = comprador;
   document.getElementById('ticket-telefono').value = telefono;
+  document.getElementById('ticket-pagado').checked = !!pagado;
 
   const btnUnmark = document.getElementById('btn-unmark');
   const btnSave = document.getElementById('btn-save-ticket');
@@ -303,6 +304,7 @@ $('#form-ticket').addEventListener('submit', async (e) => {
   const id = document.getElementById('ticket-id').value;
   const comprador = document.getElementById('ticket-comprador').value.trim();
   const telefono = document.getElementById('ticket-telefono').value.trim();
+  const pagado = document.getElementById('ticket-pagado').checked;
   if (!comprador) return;
 
   const btn = document.getElementById('btn-save-ticket');
@@ -310,7 +312,7 @@ $('#form-ticket').addEventListener('submit', async (e) => {
   try {
     await fetchJSON(`${API}/tickets/${id}`, {
       method: 'PUT',
-      body: { comprador, telefono, vendido: true },
+      body: { comprador, telefono, vendido: true, pagado },
     });
     showToast('Ticket guardado', 'success');
     closeTicketModal();
@@ -330,7 +332,7 @@ document.getElementById('btn-unmark').addEventListener('click', async () => {
   try {
     await fetchJSON(`${API}/tickets/${id}`, {
       method: 'PUT',
-      body: { comprador: null, telefono: null, vendido: false },
+      body: { comprador: null, telefono: null, vendido: false, pagado: false },
     });
     showToast(`Ticket #${numero} liberado`, 'info');
     closeTicketModal();

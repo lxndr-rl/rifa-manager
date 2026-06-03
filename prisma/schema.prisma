@@ -32,6 +32,7 @@ model Ticket {
   comprador String?
   telefono  String?
   vendido   Boolean  @default(false)
+  pagado    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@unique([rifaId, numero])
