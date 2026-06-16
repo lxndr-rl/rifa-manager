@@ -279,14 +279,17 @@ async function openRifa(id) {
       </div>`;
 
     if (currentRifaImages.length > 0) {
+      window._adminImages = currentRifaImages.map(img => img.url);
       document.getElementById('rifa-images-gallery').innerHTML = `
         <div class="prize-gallery">
-          ${currentRifaImages.map(img => `
-            <div class="gallery-item">
+          ${currentRifaImages.map((img, idx) => `
+            <div class="gallery-item" data-image-idx="${idx}">
               <img src="${esc(img.url)}" alt="Premio" class="gallery-img">
             </div>
           `).join('')}
         </div>`;
+    } else {
+      window._adminImages = [];
     }
 
     document.getElementById('stats').innerHTML = `
@@ -574,5 +577,80 @@ async function shareRifa(id) {
     prompt('Copia este enlace para compartir:', url);
   }
 }
+
+// ===== LIGHTBOX =====
+let lightboxImages = [];
+let lightboxIndex = 0;
+
+function openLightbox(index) {
+  lightboxImages = window._adminImages || [];
+  if (lightboxImages.length === 0) return;
+
+  lightboxIndex = index;
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  const prev = document.getElementById('lightbox-prev');
+  const next = document.getElementById('lightbox-next');
+  const counter = document.getElementById('lightbox-counter');
+
+  img.src = lightboxImages[lightboxIndex];
+  lightbox.classList.remove('hidden');
+
+  if (lightboxImages.length > 1) {
+    prev.classList.remove('hidden');
+    next.classList.remove('hidden');
+    counter.classList.remove('hidden');
+    counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  } else {
+    prev.classList.add('hidden');
+    next.classList.add('hidden');
+    counter.classList.add('hidden');
+  }
+
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  lightbox.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function navigateLightbox(direction) {
+  lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+  const img = document.getElementById('lightbox-img');
+  const counter = document.getElementById('lightbox-counter');
+
+  img.style.animation = 'none';
+  void img.offsetWidth;
+  img.style.animation = 'lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  img.src = lightboxImages[lightboxIndex];
+  counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+}
+
+// Delegación de eventos para gallery items
+document.addEventListener('click', (e) => {
+  const galleryItem = e.target.closest('.gallery-item');
+  if (galleryItem && galleryItem.dataset.imageIdx !== undefined) {
+    openLightbox(parseInt(galleryItem.dataset.imageIdx));
+  }
+});
+
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-prev').addEventListener('click', () => navigateLightbox(-1));
+document.getElementById('lightbox-next').addEventListener('click', () => navigateLightbox(1));
+
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+
+document.addEventListener('keydown', (e) => {
+  const lightbox = document.getElementById('lightbox');
+  if (lightbox.classList.contains('hidden')) return;
+
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navigateLightbox(-1);
+  if (e.key === 'ArrowRight') navigateLightbox(1);
+});
 
 checkAuth();

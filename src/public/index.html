@@ -225,5 +225,25 @@
   </div>
 
   <script src="js/app.js"></script>
+
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <button class="lightbox-nav lightbox-prev hidden" id="lightbox-prev" aria-label="Anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <button class="lightbox-nav lightbox-next hidden" id="lightbox-next" aria-label="Siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+    <img id="lightbox-img" class="lightbox-img" src="" alt="Premio">
+    <div class="lightbox-counter hidden" id="lightbox-counter"></div>
+  </div>
 </body>
 </html>
