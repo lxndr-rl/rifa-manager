@@ -10,6 +10,12 @@ document.getElementById('btn-theme').addEventListener('click', () => {
 
 let lastUpdated = null;
 let statsData = { total: 0, vendidos: 0, disponibles: 0, ganadores: 0 };
+let currentRifaTotal = 100;
+
+function padNum(n) {
+  const digits = String(currentRifaTotal).length;
+  return String(n).padStart(digits, '0');
+}
 
 // ===== Utils =====
 function esc(str) {
@@ -70,6 +76,7 @@ async function loadSorteo() {
       disponibles: data.disponibles,
       ganadores: data.ganadores || 0,
     };
+    currentRifaTotal = data.totalNumeros;
     renderContent(data);
     lastUpdated = Date.now();
     updateTimestamp();
@@ -151,7 +158,7 @@ function renderContent(data) {
           <div class="winners-list">
             ${winnerTickets.map(t => `
               <span class="winner-chip pub-winner-chip">
-                #${t.numero}${t.comprador ? ' – ' + esc(t.comprador) : ''}
+                #${padNum(t.numero)}${t.comprador ? ' – ' + esc(t.comprador) : ''}
               </span>
             `).join('')}
           </div>
@@ -169,7 +176,7 @@ function renderContent(data) {
              data-numero="${t.numero}"
              data-comprador="${esc(t.comprador || '')}"
              data-ganador="true">
-          <span class="pub-num">${t.numero}</span>
+          <span class="pub-num">${padNum(t.numero)}</span>
           <span class="winner-star">★</span>
           ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
         </div>`;
@@ -179,11 +186,11 @@ function renderContent(data) {
         <div class="ticket pub-ticket sold"
              data-numero="${t.numero}"
              data-comprador="${esc(t.comprador || '')}">
-          <span class="pub-num">${t.numero}</span>
+          <span class="pub-num">${padNum(t.numero)}</span>
           ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
         </div>`;
     }
-    return `<div class="ticket pub-ticket available" data-numero="${t.numero}"><span class="pub-num">${t.numero}</span></div>`;
+    return `<div class="ticket pub-ticket available" data-numero="${t.numero}"><span class="pub-num">${padNum(t.numero)}</span></div>`;
   }).join('');
 }
 
@@ -249,12 +256,12 @@ function connectSSE() {
           if (isSold) {
             el.className = 'ticket pub-ticket sold';
             el.innerHTML = `
-              <span class="pub-num">${data.numero}</span>
+              <span class="pub-num">${padNum(data.numero)}</span>
               ${data.comprador ? `<span class="pub-owner">${esc(data.comprador)}</span>` : ''}`;
             el.dataset.comprador = data.comprador || '';
           } else {
             el.className = 'ticket pub-ticket available';
-            el.innerHTML = `<span class="pub-num">${data.numero}</span>`;
+            el.innerHTML = `<span class="pub-num">${padNum(data.numero)}</span>`;
             el.dataset.comprador = '';
           }
 
@@ -347,7 +354,7 @@ async function playSuspenseAnimation(winners) {
   const winnersEl = document.getElementById('suspense-winners');
   if (winnersEl && winners.length > 0) {
     winnersEl.innerHTML = winners.map((w, i) =>
-      `<span class="suspense-winner-chip" style="animation-delay:${i * 0.15}s">#${w.numero}</span>`
+      `<span class="suspense-winner-chip" style="animation-delay:${i * 0.15}s">#${padNum(w.numero)}</span>`
     ).join('');
   }
 

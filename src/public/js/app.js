@@ -2,6 +2,12 @@ const API = '/api';
 let token = localStorage.getItem('token');
 let currentRifaId = null;
 let currentRifaImages = [];
+let currentRifaTotal = 100;
+
+function padNum(n) {
+  const digits = String(currentRifaTotal).length;
+  return String(n).padStart(digits, '0');
+}
 
 // ===== Tema =====
 (function initTheme() {
@@ -249,6 +255,7 @@ async function openRifa(id) {
     ]);
 
     currentRifaImages = rifa.images || [];
+    currentRifaTotal = rifa.totalNumeros;
 
     document.getElementById('rifa-info').innerHTML = `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.625rem;">
@@ -313,7 +320,7 @@ async function openRifa(id) {
             <strong>Ganador${winnerTickets.length > 1 ? 'es' : ''}:</strong>
             ${winnerTickets.map(t => `
               <span class="winner-chip">
-                #${t.numero}${t.comprador ? ' – ' + esc(t.comprador) : ''}
+                #${padNum(t.numero)}${t.comprador ? ' – ' + esc(t.comprador) : ''}
               </span>
             `).join('')}
           </div>
@@ -326,7 +333,7 @@ async function openRifa(id) {
            data-comprador="${esc(t.comprador || '')}" data-telefono="${esc(t.telefono || '')}"
            data-vendido="${t.vendido}" data-pagado="${t.pagado}" data-ganador="${t.ganador}"
            title="${t.ganador ? '¡GANADOR! ' : ''}${t.vendido ? esc(t.comprador) + (t.telefono ? ' · ' + esc(t.telefono) : '') + (t.pagado ? ' · ✓ Pagado' : ' · Pendiente') : 'Disponible'}">
-        ${t.numero}
+        ${padNum(t.numero)}
         ${t.ganador ? '<span class="winner-star">★</span>' : ''}
       </div>`).join('');
   } catch (err) {
@@ -346,7 +353,7 @@ document.getElementById('tickets-grid').addEventListener('click', (e) => {
 // ===== Tickets =====
 function openTicket(id, numero, comprador, telefono, vendido, pagado, ganador) {
   document.getElementById('ticket-id').value = id;
-  document.getElementById('ticket-numero').textContent = numero;
+  document.getElementById('ticket-numero').textContent = padNum(numero);
   document.getElementById('ticket-comprador').value = comprador;
   document.getElementById('ticket-telefono').value = telefono;
   document.getElementById('ticket-pagado').checked = !!pagado;
@@ -416,6 +423,49 @@ document.getElementById('btn-unmark').addEventListener('click', async () => {
     openRifa(currentRifaId);
   } catch (err) {
     showToast(err.message, 'error');
+  }
+});
+
+// ===== Quick Winner =====
+document.getElementById('btn-quick-winner').addEventListener('click', async () => {
+  const input = document.getElementById('quick-winner-num');
+  const num = parseInt(input.value);
+  if (!num || num < 1) {
+    showToast('Ingresa un número válido', 'error');
+    return;
+  }
+
+  try {
+    const tickets = await fetchJSON(`${API}/tickets/rifa/${currentRifaId}`);
+    const ticket = tickets.find(t => t.numero === num);
+    if (!ticket) {
+      showToast(`No existe el ticket #${num}`, 'error');
+      return;
+    }
+
+    await fetchJSON(`${API}/tickets/${ticket.id}`, {
+      method: 'PUT',
+      body: {
+        comprador: ticket.comprador || 'Ganador',
+        telefono: ticket.telefono,
+        vendido: true,
+        pagado: ticket.pagado,
+        ganador: true,
+      },
+    });
+
+    showToast(`¡Ticket #${padNum(num)} marcado como ganador!`, 'success');
+    input.value = '';
+    openRifa(currentRifaId);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+document.getElementById('quick-winner-num').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btn-quick-winner').click();
   }
 });
 
