@@ -9,7 +9,7 @@ document.getElementById('btn-theme').addEventListener('click', () => {
 });
 
 let lastUpdated = null;
-let statsData = { total: 0, vendidos: 0, disponibles: 0 };
+let statsData = { total: 0, vendidos: 0, disponibles: 0, ganadores: 0 };
 
 // ===== Utils =====
 function esc(str) {
@@ -64,7 +64,12 @@ async function loadSorteo() {
     if (!res.ok) throw new Error('error');
     const data = await res.json();
 
-    statsData = { total: data.totalNumeros, vendidos: data.vendidos, disponibles: data.disponibles };
+    statsData = {
+      total: data.totalNumeros,
+      vendidos: data.vendidos,
+      disponibles: data.disponibles,
+      ganadores: data.ganadores || 0,
+    };
     renderContent(data);
     lastUpdated = Date.now();
     updateTimestamp();
@@ -72,11 +77,13 @@ async function loadSorteo() {
     document.getElementById('state-loading').classList.add('hidden');
     document.getElementById('state-error').classList.add('hidden');
     document.getElementById('state-content').classList.remove('hidden');
+    return data;
   } catch (_) {
     document.getElementById('state-loading').classList.add('hidden');
     if (document.getElementById('state-content').classList.contains('hidden')) {
       document.getElementById('state-error').classList.remove('hidden');
     }
+    return null;
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -105,18 +112,75 @@ function renderContent(data) {
       </div>
     </div>`;
 
+  const imagesEl = document.getElementById('pub-images');
+  if (data.images && data.images.length > 0) {
+    imagesEl.innerHTML = `
+      <div class="prize-gallery">
+        ${data.images.map((url, idx) => `
+          <div class="gallery-item" data-image-idx="${idx}">
+            <img src="${esc(url)}" alt="Premio" class="gallery-img">
+          </div>
+        `).join('')}
+      </div>`;
+    imagesEl.style.display = '';
+    window._sorteoImages = data.images;
+  } else {
+    imagesEl.innerHTML = '';
+    imagesEl.style.display = 'none';
+    window._sorteoImages = [];
+  }
+
   renderStats();
 
+  const winnersEl = document.getElementById('pub-winners');
+  const winnerTickets = (data.tickets || []).filter(t => t.ganador);
+  if (winnerTickets.length > 0) {
+    winnersEl.classList.remove('hidden');
+    winnersEl.innerHTML = `
+      <div class="winners-banner-inner pub-winners-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+        </svg>
+        <div>
+          <strong>¡Ganador${winnerTickets.length > 1 ? 'es' : ''} del sorteo!</strong>
+          <div class="winners-list">
+            ${winnerTickets.map(t => `
+              <span class="winner-chip pub-winner-chip">
+                #${t.numero}${t.comprador ? ' – ' + esc(t.comprador) : ''}
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      </div>`;
+  } else {
+    winnersEl.classList.add('hidden');
+    winnersEl.innerHTML = '';
+  }
+
   document.getElementById('pub-tickets').innerHTML = data.tickets.map(t => {
-    if (t.vendido) {
+    if (t.ganador) {
       return `
-        <div class="ticket pub-ticket sold${t.pagado ? ' pagado' : ''}"
+        <div class="ticket pub-ticket winner"
              data-numero="${t.numero}"
              data-comprador="${esc(t.comprador || '')}"
-             data-pagado="${t.pagado}">
+             data-ganador="true">
+          <span class="pub-num">${t.numero}</span>
+          <span class="winner-star">★</span>
+          ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
+        </div>`;
+    }
+    if (t.vendido) {
+      return `
+        <div class="ticket pub-ticket sold"
+             data-numero="${t.numero}"
+             data-comprador="${esc(t.comprador || '')}">
           <span class="pub-num">${t.numero}</span>
           ${t.comprador ? `<span class="pub-owner">${esc(t.comprador)}</span>` : ''}
-          <span class="pub-status-dot ${t.pagado ? 'pagado' : 'pendiente'}" title="${t.pagado ? 'Pagado' : 'Pendiente'}"></span>
         </div>`;
     }
     return `<div class="ticket pub-ticket available" data-numero="${t.numero}"><span class="pub-num">${t.numero}</span></div>`;
@@ -138,7 +202,12 @@ function renderStats() {
     <div class="stat-card stat-available">
       <div class="stat-number">${statsData.disponibles}</div>
       <div class="stat-label">Disponibles</div>
-    </div>`;
+    </div>
+    ${statsData.ganadores > 0 ? `
+    <div class="stat-card stat-winner">
+      <div class="stat-number">${statsData.ganadores}</div>
+      <div class="stat-label">Ganador${statsData.ganadores > 1 ? 'es' : ''}</div>
+    </div>` : ''}`;
 }
 
 // ===== SSE =====
@@ -162,30 +231,33 @@ function connectSSE() {
 
     if (data.type === 'ticket') {
       const el = document.querySelector(`[data-numero="${data.numero}"]`);
-      if (el) {
-        const wasSold   = el.classList.contains('sold');
-        const isSold    = data.vendido;
-        const isPagado  = !!data.pagado;
-        const prevPagado = el.dataset.pagado === 'true';
+      const wasWinner = el && el.dataset.ganador === 'true';
+      const isWinner = !!data.ganador;
 
-        if (wasSold !== isSold || (isSold && prevPagado !== isPagado)) {
+      if (isWinner || wasWinner !== isWinner) {
+        loadSorteo();
+        lastUpdated = Date.now();
+        updateTimestamp();
+        return;
+      }
+
+      if (el) {
+        const wasSold = el.classList.contains('sold');
+        const isSold  = data.vendido;
+
+        if (wasSold !== isSold) {
           if (isSold) {
-            el.className = `ticket pub-ticket sold${isPagado ? ' pagado' : ''}`;
+            el.className = 'ticket pub-ticket sold';
             el.innerHTML = `
               <span class="pub-num">${data.numero}</span>
-              ${data.comprador ? `<span class="pub-owner">${esc(data.comprador)}</span>` : ''}
-              <span class="pub-status-dot ${isPagado ? 'pagado' : 'pendiente'}" title="${isPagado ? 'Pagado' : 'Pendiente'}"></span>`;
-            el.dataset.pagado = isPagado;
+              ${data.comprador ? `<span class="pub-owner">${esc(data.comprador)}</span>` : ''}`;
             el.dataset.comprador = data.comprador || '';
           } else {
             el.className = 'ticket pub-ticket available';
             el.innerHTML = `<span class="pub-num">${data.numero}</span>`;
-            el.dataset.pagado = 'false';
             el.dataset.comprador = '';
           }
-        }
 
-        if (wasSold !== isSold) {
           if (isSold) { statsData.vendidos++; statsData.disponibles--; }
           else        { statsData.vendidos--; statsData.disponibles++; }
           renderStats();
@@ -202,18 +274,175 @@ function connectSSE() {
 
   source.onerror = () => {
     setLiveStatus('reconnecting');
-    // EventSource reconecta automáticamente; cuando vuelva a abrir, recargamos
     source.addEventListener('open', () => {
       setLiveStatus('connected');
-      loadSorteo(); // Sincronizar estado tras reconexión
+      loadSorteo();
     }, { once: true });
   };
 
   return source;
 }
 
+// ===== SUSPENSE ANIMATION =====
+let suspensePlayed = false;
+
+function createConfetti() {
+  const container = document.getElementById('suspense-confetti');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const colors = ['#f59e0b', '#f97316', '#fbbf24', '#ef4444', '#10b981', '#6366f1', '#ec4899'];
+  const pieces = 60;
+
+  for (let i = 0; i < pieces; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 10 + 5) + 'px';
+    piece.style.height = (Math.random() * 10 + 5) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    piece.style.animation = `confettiFall ${Math.random() * 2 + 2}s linear ${Math.random() * 0.5}s forwards`;
+    container.appendChild(piece);
+  }
+}
+
+function showSuspensePhase(phaseId) {
+  document.querySelectorAll('.suspense-phase').forEach(el => el.classList.add('hidden'));
+  const phase = document.getElementById(phaseId);
+  if (phase) phase.classList.remove('hidden');
+}
+
+function playCountdown(number, callback) {
+  const numEl = document.getElementById('suspense-number');
+  if (!numEl) return;
+
+  numEl.textContent = number;
+  numEl.style.animation = 'none';
+  void numEl.offsetWidth;
+  numEl.style.animation = 'suspenseCountPulse 1s ease-in-out';
+
+  setTimeout(callback, 1000);
+}
+
+async function playSuspenseAnimation(winners) {
+  if (suspensePlayed) return;
+  suspensePlayed = true;
+
+  const overlay = document.getElementById('suspense-overlay');
+  if (!overlay) return;
+
+  overlay.classList.remove('hidden');
+
+  showSuspensePhase('suspense-phase-intro');
+  await new Promise(r => setTimeout(r, 2500));
+
+  showSuspensePhase('suspense-phase-countdown');
+  await new Promise(r => playCountdown(3, r));
+  await new Promise(r => playCountdown(2, r));
+  await new Promise(r => playCountdown(1, r));
+
+  showSuspensePhase('suspense-phase-reveal');
+
+  const winnersEl = document.getElementById('suspense-winners');
+  if (winnersEl && winners.length > 0) {
+    winnersEl.innerHTML = winners.map((w, i) =>
+      `<span class="suspense-winner-chip" style="animation-delay:${i * 0.15}s">#${w.numero}</span>`
+    ).join('');
+  }
+
+  createConfetti();
+  await new Promise(r => setTimeout(r, 3500));
+
+  overlay.classList.add('fade-out');
+  await new Promise(r => setTimeout(r, 800));
+  overlay.classList.add('hidden');
+  overlay.classList.remove('fade-out');
+}
+
+// ===== LIGHTBOX =====
+let lightboxImages = [];
+let lightboxIndex = 0;
+
+function openLightbox(index) {
+  lightboxImages = window._sorteoImages || [];
+  if (lightboxImages.length === 0) return;
+
+  lightboxIndex = index;
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  const prev = document.getElementById('lightbox-prev');
+  const next = document.getElementById('lightbox-next');
+  const counter = document.getElementById('lightbox-counter');
+
+  img.src = lightboxImages[lightboxIndex];
+  lightbox.classList.remove('hidden');
+
+  if (lightboxImages.length > 1) {
+    prev.classList.remove('hidden');
+    next.classList.remove('hidden');
+    counter.classList.remove('hidden');
+    counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  } else {
+    prev.classList.add('hidden');
+    next.classList.add('hidden');
+    counter.classList.add('hidden');
+  }
+
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  lightbox.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function navigateLightbox(direction) {
+  lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+  const img = document.getElementById('lightbox-img');
+  const counter = document.getElementById('lightbox-counter');
+
+  img.style.animation = 'none';
+  void img.offsetWidth;
+  img.style.animation = 'lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  img.src = lightboxImages[lightboxIndex];
+  counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+}
+
+// Delegación de eventos para gallery items
+document.addEventListener('click', (e) => {
+  const galleryItem = e.target.closest('.gallery-item');
+  if (galleryItem && galleryItem.dataset.imageIdx !== undefined) {
+    openLightbox(parseInt(galleryItem.dataset.imageIdx));
+  }
+});
+
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-prev').addEventListener('click', () => navigateLightbox(-1));
+document.getElementById('lightbox-next').addEventListener('click', () => navigateLightbox(1));
+
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+
+document.addEventListener('keydown', (e) => {
+  const lightbox = document.getElementById('lightbox');
+  if (lightbox.classList.contains('hidden')) return;
+
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navigateLightbox(-1);
+  if (e.key === 'ArrowRight') navigateLightbox(1);
+});
+
 // ===== Init =====
 document.getElementById('btn-refresh').addEventListener('click', loadSorteo);
 setInterval(updateTimestamp, 15_000);
 
-loadSorteo().then(() => connectSSE());
+loadSorteo().then((data) => {
+  if (data && data.ganadores > 0 && !suspensePlayed) {
+    const winnerTickets = (data.tickets || []).filter(t => t.ganador);
+    playSuspenseAnimation(winnerTickets);
+  }
+  connectSSE();
+});

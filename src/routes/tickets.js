@@ -25,12 +25,15 @@ router.get('/rifa/:rifaId/stats', async (req, res) => {
   const rifaId = parseInt(req.params.rifaId);
   const total = await prisma.ticket.count({ where: { rifaId } });
   const vendidos = await prisma.ticket.count({ where: { rifaId, vendido: true } });
+  const ganadores = await prisma.ticket.count({ where: { rifaId, ganador: true } });
+  const pagados = await prisma.ticket.count({ where: { rifaId, vendido: true, pagado: true } });
+  const pendientes = await prisma.ticket.count({ where: { rifaId, vendido: true, pagado: false } });
 
-  res.json({ total, vendidos, disponibles: total - vendidos });
+  res.json({ total, vendidos, disponibles: total - vendidos, ganadores, pagados, pendientes });
 });
 
 router.put('/:id', async (req, res) => {
-  const { comprador, telefono, vendido, pagado } = req.body;
+  const { comprador, telefono, vendido, pagado, ganador } = req.body;
   const id = parseInt(req.params.id);
 
   const existing = await prisma.ticket.findUnique({ where: { id } });
@@ -43,6 +46,7 @@ router.put('/:id', async (req, res) => {
       telefono:  telefono  !== undefined ? telefono  : existing.telefono,
       vendido:   vendido   !== undefined ? vendido   : existing.vendido,
       pagado:    pagado    !== undefined ? pagado    : existing.pagado,
+      ganador:   ganador   !== undefined ? ganador   : existing.ganador,
     },
   });
 
@@ -51,6 +55,7 @@ router.put('/:id', async (req, res) => {
     numero: updated.numero,
     vendido: updated.vendido,
     pagado: updated.pagado,
+    ganador: updated.ganador,
     comprador: maskName(updated.comprador),
   });
   res.json(updated);

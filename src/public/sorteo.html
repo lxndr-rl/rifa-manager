@@ -20,6 +20,24 @@
 </head>
 <body>
 
+  <div id="suspense-overlay" class="suspense-overlay hidden">
+    <div class="suspense-content">
+      <div id="suspense-phase-intro" class="suspense-phase">
+        <div class="suspense-icon">🎰</div>
+        <h2 class="suspense-title">Este sorteo tiene ganador...</h2>
+      </div>
+      <div id="suspense-phase-countdown" class="suspense-phase hidden">
+        <div id="suspense-number" class="suspense-number">3</div>
+      </div>
+      <div id="suspense-phase-reveal" class="suspense-phase hidden">
+        <div class="suspense-reveal-icon">🏆</div>
+        <h2 class="suspense-reveal-title">¡El ganador es!</h2>
+        <div id="suspense-winners" class="suspense-winners"></div>
+      </div>
+    </div>
+    <div id="suspense-confetti" class="suspense-confetti"></div>
+  </div>
+
   <header class="pub-header">
     <div class="header-inner">
       <div class="header-brand">
@@ -68,7 +86,9 @@
 
       <div id="state-content" class="hidden">
         <div id="pub-hero" class="rifa-hero"></div>
+        <div id="pub-images" class="rifa-images-gallery"></div>
         <div id="pub-stats" class="stats-row" style="margin-top:1.125rem;"></div>
+        <div id="pub-winners" class="winners-banner hidden"></div>
 
         <div class="section-bar">
           <div class="section-left">
@@ -76,8 +96,7 @@
             <div class="legend">
               <span class="legend-item"><span class="legend-dot available"></span>Disponible</span>
               <span class="legend-item"><span class="legend-dot sold"></span>Vendido</span>
-              <span class="legend-item"><span class="pub-status-dot pagado"></span>Pagado</span>
-              <span class="legend-item"><span class="pub-status-dot pendiente"></span>Pendiente</span>
+              <span class="legend-item"><span class="legend-dot winner"></span>Ganador</span>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:.625rem;">
@@ -106,6 +125,26 @@
   <footer class="pub-footer">
     Vista de solo lectura &middot; Powered by <strong>Arimar</strong>
   </footer>
+
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <button class="lightbox-nav lightbox-prev hidden" id="lightbox-prev" aria-label="Anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <button class="lightbox-nav lightbox-next hidden" id="lightbox-next" aria-label="Siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+    <img id="lightbox-img" class="lightbox-img" src="" alt="Premio">
+    <div class="lightbox-counter hidden" id="lightbox-counter"></div>
+  </div>
 
   <script src="/js/sorteo.js"></script>
 </body>
